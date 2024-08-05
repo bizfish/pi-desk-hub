@@ -15,7 +15,7 @@ import hub_constants
 
 
 class PinControlPanel:
-    def __init__(self): 
+    def __init__(self):
         Device.pin_factory = MockFactory()
         pr.set_window_size(hub_constants.SCREEN_WIDTH * 2, hub_constants.SCREEN_HEIGHT)
         self.pin10 = Device.pin_factory.pin(10)
@@ -32,33 +32,36 @@ class PinControlPanel:
                 "header_y": 10,
                 "pin": Device.pin_factory.pin(27),
                 "toggle": ffi.new("bool *", False),
+                "type": "Button",
             },
             10: {
                 "header_y": 50,
                 "pin": Device.pin_factory.pin(10),
                 "toggle": ffi.new("bool *", False),
+                "type": "Output",
             },
             11: {
                 "header_y": 90,
                 "pin": Device.pin_factory.pin(11),
                 "toggle": ffi.new("bool *", False),
+                "type": "Button",
             },
             19: {
                 "header_y": 130,
                 "pin": Device.pin_factory.pin(19),
                 "toggle": ffi.new("bool *", False),
+                "type": "EncoderB",
             },
             26: {
                 "header_y": 170,
                 "pin": Device.pin_factory.pin(26),
                 "toggle": ffi.new("bool *", False),
+                "type": "EncoderA",
             },
         }
 
     def draw_header(self, pin, y):
-        pr.draw_text(
-            str(pin), hub_constants.SCREEN_WIDTH + 10, y, 20, pr.BLACK
-        )
+        pr.draw_text(str(pin), hub_constants.SCREEN_WIDTH + 10, y, 20, pr.BLACK)
         pr.draw_line(
             hub_constants.SCREEN_WIDTH,
             y + 20,
@@ -70,9 +73,12 @@ class PinControlPanel:
     def close(self):
         pr.close_window()
 
+    # TODO: limit to type: Button
     def draw_pin_button(self, pin):
+        if not pin["type"] == "Button":
+            return
         x = hub_constants.SCREEN_WIDTH + 45
-        y = pin['header_y']
+        y = pin["header_y"]
         width = 45
         height = 15
         if pr.is_mouse_button_down(0) and pr.check_collision_point_rec(
@@ -86,18 +92,19 @@ class PinControlPanel:
             pr.draw_rectangle(x, y, width, height, pr.BLUE)
             return False
 
+    # TODO: implement simulated rotary encoder
     def pin_control(self, pin, data):
-        self.draw_header(pin, data['header_y'])
+        self.draw_header(pin, data["header_y"])
         pr.gui_toggle(
-            pr.Rectangle(hub_constants.SCREEN_WIDTH + 100, data['header_y'], 10, 15),
+            pr.Rectangle(hub_constants.SCREEN_WIDTH + 100, data["header_y"], 10, 15),
             "",
-            data['toggle'],
+            data["toggle"],
         )
-        pressed = self.draw_pin_button(data) or ffi.unpack(data['toggle'], 1)[0]
+        pressed = self.draw_pin_button(data) or ffi.unpack(data["toggle"], 1)[0]
         if pressed:
-            data['pin'].drive_low()
+            data["pin"].drive_low()
         else:
-            data['pin'].drive_high()
+            data["pin"].drive_high()
 
     def show_mouse_location(self):
         mouse_x, mouse_y = pr.get_mouse_x(), pr.get_mouse_y()
@@ -106,7 +113,13 @@ class PinControlPanel:
     def mainloop(self):
         # Main game loop
         # Update
-        pr.draw_line(hub_constants.SCREEN_WIDTH, 0, hub_constants.SCREEN_WIDTH, hub_constants.SCREEN_HEIGHT, pr.BLACK)
+        pr.draw_line(
+            hub_constants.SCREEN_WIDTH + 1,
+            0,
+            hub_constants.SCREEN_WIDTH + 1,
+            hub_constants.SCREEN_HEIGHT,
+            pr.BLACK,
+        )
         self.show_mouse_location()
         for pin, data in self.pins.items():
             self.pin_control(pin, data)
