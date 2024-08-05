@@ -2,7 +2,7 @@ import pyray as pr
 from raylib import ffi
 from gpiozero import Device, Button
 from gpiozero.pins.mock import MockFactory
-import hub_constants
+import hub_constants, hub_gui
 
 # Initialization
 
@@ -22,40 +22,36 @@ class PinControlPanel:
         self.pin11 = Device.pin_factory.pin(11)
         self.pin19 = Device.pin_factory.pin(19)
         self.pin26 = Device.pin_factory.pin(26)
-        self.pin_10_toggle = ffi.new("bool *", False)
-        self.pin_11_toggle = ffi.new("bool *", False)
-        self.pin_19_toggle = ffi.new("bool *", False)
-        self.pin_26_toggle = ffi.new("bool *", False)
 
         self.pins = {
             27: {
                 "header_y": 10,
                 "pin": Device.pin_factory.pin(27),
-                "toggle": ffi.new("bool *", False),
+                "toggle": False,
                 "type": "Button",
             },
             10: {
                 "header_y": 50,
                 "pin": Device.pin_factory.pin(10),
-                "toggle": ffi.new("bool *", False),
+                "toggle": False,
                 "type": "Output",
             },
             11: {
                 "header_y": 90,
                 "pin": Device.pin_factory.pin(11),
-                "toggle": ffi.new("bool *", False),
+                "toggle": False,
                 "type": "Button",
             },
             19: {
                 "header_y": 130,
                 "pin": Device.pin_factory.pin(19),
-                "toggle": ffi.new("bool *", False),
+                "toggle": False,
                 "type": "EncoderB",
             },
             26: {
                 "header_y": 170,
                 "pin": Device.pin_factory.pin(26),
-                "toggle": ffi.new("bool *", False),
+                "toggle": False,
                 "type": "EncoderA",
             },
         }
@@ -95,12 +91,15 @@ class PinControlPanel:
     # TODO: implement simulated rotary encoder
     def pin_control(self, pin, data):
         self.draw_header(pin, data["header_y"])
-        pr.gui_toggle(
-            pr.Rectangle(hub_constants.SCREEN_WIDTH + 100, data["header_y"], 10, 15),
+        data["toggle"] = hub_gui.toggle(
+            hub_constants.SCREEN_WIDTH + 100,
+            data["header_y"],
+            10,
+            15,
             "",
             data["toggle"],
         )
-        pressed = self.draw_pin_button(data) or ffi.unpack(data["toggle"], 1)[0]
+        pressed = self.draw_pin_button(data) or data["toggle"]
         if pressed:
             data["pin"].drive_low()
         else:
