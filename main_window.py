@@ -1,3 +1,4 @@
+import os
 import pyray as pr
 from gpiozero import Button, Device
 import pin_control_panel
@@ -23,7 +24,7 @@ destination = pr.Rectangle(
 )
 
 # handle mock pins
-debug = not Device.pin_factory
+debug = "TERM_PROGRAM" in os.environ.keys() and os.environ["TERM_PROGRAM"] == "vscode"
 if debug:
     test_window = pin_control_panel.PinControlPanel()
 
