@@ -13,14 +13,15 @@ pr.set_target_fps(30)
 debug = "TERM_PROGRAM" in os.environ.keys() and os.environ["TERM_PROGRAM"] == "vscode"
 if debug:
     test_window = pin_control_panel.PinControlPanel()
-    
-#initialize inputs
-# 27: encoder A
-# 10: encoder B
+
+# initialize inputs
+# 26: encoder A
+# 19: encoder B
 # 11: encoder Button
-# 19: pushbutton
-# 26: on-air limit switch/toggle
-on_air = Button(26)
+# 10: pushbutton
+# 27: on-air limit switch/toggle
+on_air = Button(27)
+
 
 def show_on_air():
     if on_air.is_active:
