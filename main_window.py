@@ -38,7 +38,7 @@ on_air = Button(27)
 
 
 def show_on_air():
-    if on_air.is_active:
+    if on_air.is_active == hub_constants.ON_AIR_PRESSED:
         color = pr.RED
     else:
         color = pr.GRAY
