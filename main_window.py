@@ -3,12 +3,19 @@ import pyray as pr
 from gpiozero import Button, Device
 import pin_control_panel
 import hub_constants
+import pigpio
 
+# TODO take build pictures
 # Initialize screen
 pr.init_window(
     hub_constants.SCREEN_WIDTH, hub_constants.SCREEN_HEIGHT, "pi-desk-hub main window"
 )
 pr.set_target_fps(30)
+
+# TODO initialize i2c using pigpio, unpack data, assign values to mock pins?
+# BtnsData |= digitalRead(ENCA_PIN) << 0;
+# BtnsData |= digitalRead(ENCB_PIN) << 1;
+# BtnsData |= digitalRead(BTN1_PIN) << 2;
 
 screen_texture = pr.load_render_texture(
     hub_constants.SCREEN_HEIGHT, hub_constants.SCREEN_WIDTH
@@ -29,11 +36,11 @@ if debug:
     test_window = pin_control_panel.PinControlPanel()
 
 # initialize inputs
-# 26: encoder A
-# 19: encoder B
-# 11: encoder Button
-# 10: radio transmitter
-# 27: on-air limit switch/toggle? or arduino for expanded gpio?
+# 26: xiao rp2040 sda - handles encoderA,B,button + radio transmitter/receiver?
+# 19: xiao rp2040 scl
+# 11: nav button?
+# 10: nav button?
+# 27: on-air limit switch/toggle
 on_air = Button(27)
 
 

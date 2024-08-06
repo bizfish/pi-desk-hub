@@ -27,7 +27,7 @@ class PinControlPanel:
             27: {
                 "header_y": 10,
                 "pin": Device.pin_factory.pin(27),
-                "toggle": False,
+                "toggle": True,
                 "type": "Button",
             },
             10: {
