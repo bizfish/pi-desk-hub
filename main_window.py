@@ -1,4 +1,5 @@
 import io
+import math
 import pyray as pr
 from gpiozero import Button, RotaryEncoder
 import hub_constants
@@ -17,6 +18,9 @@ pr.set_target_fps(30)
 screen_texture = pr.load_render_texture(
     hub_constants.SCREEN_HEIGHT, hub_constants.SCREEN_WIDTH
 )
+rat_render = pr.load_render_texture(
+    hub_constants.SCREEN_HEIGHT, hub_constants.SCREEN_WIDTH
+)
 source = pr.Rectangle(
     0.0, 0.0, hub_constants.SCREEN_HEIGHT, -hub_constants.SCREEN_WIDTH
 )
@@ -33,10 +37,11 @@ camera.target = pr.Vector3(0.0, 2.5, 0.0)  # Camera looking at point
 camera.up = pr.Vector3(0.0, 1.0, 0.0)  # Camera up vector (rotation towards target)
 camera.fovy = 45.0  # Camera field-of-view Y
 camera.projection = pr.CAMERA_PERSPECTIVE  # Camera mode type
+camera_angle = 0
 rat_model = pr.load_model("./resources/rat.obj")
 rat_texture = pr.load_texture("./resources/rat.png")
 rat_model.materials.maps[pr.MATERIAL_MAP_ALBEDO].texture = rat_texture
-rat_position = pr.Vector3(0, 2, 0)
+rat_position = pr.Vector3(0, 1, 0)
 
 
 def is_raspberrypi():
@@ -97,32 +102,56 @@ def handle_i2c():
         pr.draw_text("i2c_controller not found", 45, 2, 3, pr.RED)
 
 
+def update_camera_position(radius, angle):
+    # Calculate x and z coordinates based on the angle and radius
+    x = radius * math.cos(angle)
+    z = radius * math.sin(angle)
+
+    # Return the updated camera position
+    return pr.Vector3(x, 5, z)
+
+
+def render_rat():
+    global camera_angle
+    if rat_alpha > 0 and on_air.is_active:  # hub_constants.DRAW_RAT
+        camera_angle += 0.05
+        camera.position = update_camera_position(10, camera_angle)
+        pr.begin_texture_mode(rat_render)
+        pr.clear_background(pr.Color(255, 255, 255, 0))
+        pr.begin_mode_3d(camera)
+        pr.draw_model_ex(
+            rat_model,
+            rat_position,
+            pr.Vector3(0.0, 1.0, 0.0),
+            -90,
+            pr.Vector3(0.1, 0.1, 0.1),
+            pr.Color(255, 255, 255, 255),
+        )
+        pr.end_mode_3d()
+        pr.end_texture_mode()
+
+
 # Main game loop
 while not pr.window_should_close():  # Detect window close button or ESC key
     # Update
-    # Draw to texture
-    pr.begin_texture_mode(screen_texture)
-    pr.clear_background(pr.SKYBLUE)
-    pr.begin_mode_3d(camera)
     if encoder_button.is_active:
         pr.draw_text("Encoder button active!", 45, 200, 4, pr.BLACK)
         encoder_val_prev = encoder.value
     else:
         encoder.value = encoder_val_prev
-    rat_rotation = 360 * encoder.value
-    pr.draw_model_ex(
-        rat_model,
-        rat_position,
-        pr.Vector3(0.0, 1.0, 0.0),
-        rat_rotation,
-        pr.Vector3(0.1, 0.1, 0.1),
-        pr.WHITE,
-    )
-    pr.end_mode_3d()
+    rat_alpha = int(255 * encoder.value)
+    render_rat()
+
+    # Draw to texture
+    pr.begin_texture_mode(screen_texture)
+    pr.clear_background(pr.SKYBLUE)
     handle_i2c()
     show_on_air()
-
+    pr.draw_texture_rec(
+        rat_render.texture, source, pr.Vector2(0, 0), pr.Color(255, 255, 255, rat_alpha)
+    )
     pr.draw_fps(5, 220)
+
     pr.end_texture_mode()
 
     # Draw texture to screen
@@ -137,13 +166,14 @@ while not pr.window_should_close():  # Detect window close button or ESC key
         pr.WHITE,
     )
     if debug:
-        test_window.mainloop()
+        test_window.mainloop(encoder.value)
         encoder.value = test_window.encoder_value
     pr.end_drawing()
 
 
 # De-Initialization
 pr.unload_render_texture(screen_texture)
+pr.unload_render_texture(rat_render)
 pr.unload_model(rat_model)
 pr.unload_texture(rat_texture)
 pr.close_window()  # Close window and OpenGL context

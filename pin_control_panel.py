@@ -1,3 +1,4 @@
+import math
 import pyray as pr
 from raylib import ffi
 from gpiozero import Device, Button
@@ -12,7 +13,7 @@ import hub_constants, hub_gui
 11
 19
 26 """
-WHEEL_SPEED = 0.01
+WHEEL_SPEED = 0.1
 
 
 class PinControlPanel:
@@ -126,11 +127,15 @@ class PinControlPanel:
         pr.draw_text(f"{mouse_x}, {mouse_y}", mouse_x + 5, mouse_y - 5, 5, pr.BLACK)
 
     def get_mwheel_input(self):
-        self.encoder_value += pr.get_mouse_wheel_move() * WHEEL_SPEED
+        move = pr.get_mouse_wheel_move()
+        pr.draw_text(str(move), 280, 250, 5, pr.BLACK)
+        pr.draw_text(str(self.encoder_value), 280, 300, 5, pr.BLACK)
+        self.encoder_value = min(1, max(0, self.encoder_value + move * WHEEL_SPEED))
 
-    def mainloop(self):
+    def mainloop(self, encoder_value):
         # Main game loop
         # Update
+        self.encoder_value = encoder_value
         pr.draw_line(
             hub_constants.SCREEN_WIDTH + 1,
             0,
