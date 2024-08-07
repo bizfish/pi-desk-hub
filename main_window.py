@@ -81,7 +81,7 @@ def handle_i2c():
     if i2c_controller:
         i2c_controller.update_i2c_devices()
         if push_button1.is_active:
-            pr.draw_text("encoder button active", 45, 10, 3, pr.GREEN)
+            pr.draw_text("push_button1 active", 45, 10, 3, pr.GREEN)
         pr.draw_text(str(encoder.value), 45, 20, 3, pr.ORANGE)
     else:
         pr.draw_text("i2c_controller not found", 45, 2, 3, pr.RED)
@@ -97,6 +97,8 @@ while not pr.window_should_close():  # Detect window close button or ESC key
     pr.clear_background(pr.SKYBLUE)
     handle_i2c()
     show_on_air()
+    if enocder_button.is_active:
+        pr.draw_text("Encoder button active!", 45, 30, 3, pr.BLACK)
     pr.draw_fps(5, 220)
     pr.end_texture_mode()
 
