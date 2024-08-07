@@ -41,13 +41,19 @@ def is_raspberrypi():
     return False
 
 
-# handle mock pins
+# handle mock pins and i2c connection
 debug = not is_raspberrypi()
-i2c_controller = None
 if debug:
     test_window = pin_control_panel.PinControlPanel()
     on_air = Button(26)
-
+    i2c_controller = None
+else:
+    try:
+        i2c_controller = I2cController()
+    except TimeoutError as e:
+        print(e)
+        quit()
+    on_air = i2c_controller.devices["on_air_button"]
 
 # initialize inputs
 # 26: xiao rp2040 sda - handles encoderA,B,button + radio transmitter/receiver?
@@ -57,13 +63,6 @@ if debug:
 # 27: Encoder A
 encoder = RotaryEncoder(27, 10)
 enocder_button = Button(11)
-if not debug:
-    try:
-        i2c_controller = I2cController()
-    except TimeoutError as e:
-        print(e)
-        quit()
-    on_air = i2c_controller.devices["on_air_button"]
 
 
 def show_on_air():
