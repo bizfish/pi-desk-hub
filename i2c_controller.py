@@ -6,17 +6,22 @@ from gpiozero import Button, RotaryEncoder
 
 
 class I2cController:
-    def __init__(self, pi):
+    def __init__(self):
         self.i2c_handle = None
         self.i2c_pin_factory = MockFactory()
         self.encoder = RotaryEncoder(1, 2, pin_factory=self.i2c_pin_factory)
         self.encoder_button = Button(3, pin_factory=self.i2c_pin_factory)
         self.pi = pigpio.pi()
         start_time = time.time()
-        while not i2c_handle and time.time() - start_time < hub_constants.I2C_TIMEOUT:
-            i2c_handle = pi.i2c_open(hub_constants.I2C_BUS, hub_constants.I2C_ADDRESS)
+        self.i2c_handle = None
+        while (
+            not self.i2c_handle and time.time() - start_time < hub_constants.I2C_TIMEOUT
+        ):
+            self.i2c_handle = self.pi.i2c_open(
+                hub_constants.I2C_BUS, hub_constants.I2C_ADDRESS
+            )
             time.sleep(1)
-        if not i2c_handle:
+        if not self.i2c_handle:
             raise TimeoutError("i2c connection timed out")
 
     def update_i2c_devices(self):
