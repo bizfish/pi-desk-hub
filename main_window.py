@@ -30,6 +30,17 @@ destination = pr.Rectangle(
     hub_constants.SCREEN_WIDTH,
 )
 
+camera = pr.Camera3D()
+camera.position = pr.Vector3(5.0, 5.0, 5.0)  # Camera position
+camera.target = pr.Vector3(0.0, 2.5, 0.0)  # Camera looking at point
+camera.up = pr.Vector3(0.0, 1.0, 0.0)  # Camera up vector (rotation towards target)
+camera.fovy = 45.0  # Camera field-of-view Y
+camera.projection = pr.CAMERA_PERSPECTIVE  # Camera mode type
+rat_model = pr.load_model("./resources/rat.obj")
+rat_texture = pr.load_texture("./resources/rat.png")
+rat_model.materials.maps[pr.MATERIAL_MAP_ALBEDO].texture = rat_texture
+rat_position = pr.Vector3(0, 2, 0)
+
 
 def is_raspberrypi():
     try:
@@ -62,7 +73,7 @@ else:
 # 10: Encoder B
 # 27: Encoder A
 encoder = RotaryEncoder(27, 10)
-enocder_button = Button(11)
+encoder_button = Button(11)
 
 
 def show_on_air():
@@ -91,14 +102,15 @@ def handle_i2c():
 # Main game loop
 while not pr.window_should_close():  # Detect window close button or ESC key
     # Update
-    # TODO: Update your variables here
-
     # Draw to texture
     pr.begin_texture_mode(screen_texture)
     pr.clear_background(pr.SKYBLUE)
+    pr.begin_mode_3d(camera)
+    pr.draw_model(rat_model, rat_position, 0.1, pr.WHITE)
+    pr.end_mode_3d()
     handle_i2c()
     show_on_air()
-    if enocder_button.is_active:
+    if encoder_button.is_active:
         pr.draw_text("Encoder button active!", 45, 200, 4, pr.BLACK)
     pr.draw_fps(5, 220)
     pr.end_texture_mode()
@@ -121,4 +133,6 @@ while not pr.window_should_close():  # Detect window close button or ESC key
 
 # De-Initialization
 pr.unload_render_texture(screen_texture)
+pr.unload_model(rat_model)
+pr.unload_texture(rat_texture)
 pr.close_window()  # Close window and OpenGL context
