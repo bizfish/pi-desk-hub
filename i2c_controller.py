@@ -39,7 +39,7 @@ class I2cController:
 
     def update_i2c_pins(self):
         byte = self.pi.i2c_read_byte(self.handle)
-        bits = [int(i) for i in "{0:08b}"[::-1].format(byte)]
+        bits = [int(i) for i in "{0:08b}".format(byte)[::-1]]
         if len(bits) == 0:
             return
         for i, bit in enumerate(bits):
