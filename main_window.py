@@ -39,8 +39,6 @@ camera.fovy = 45.0  # Camera field-of-view Y
 camera.projection = pr.CAMERA_PERSPECTIVE  # Camera mode type
 camera_angle = 0
 rat_model = pr.load_model("./resources/rat.obj")
-rat_texture = pr.load_texture("./resources/rat.png")
-rat_model.materials.maps[pr.MATERIAL_MAP_ALBEDO].texture = rat_texture
 rat_position = pr.Vector3(0, 1, 0)
 
 
@@ -181,5 +179,4 @@ while not pr.window_should_close():  # Detect window close button or ESC key
 pr.unload_render_texture(screen_texture)
 pr.unload_render_texture(rat_render)
 pr.unload_model(rat_model)
-pr.unload_texture(rat_texture)
 pr.close_window()  # Close window and OpenGL context
