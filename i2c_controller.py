@@ -7,35 +7,33 @@ from gpiozero import Button, RotaryEncoder
 
 class I2cController:
     def __init__(self):
-        self.i2c_handle = None
-        self.i2c_pin_factory = MockFactory()
-        self.encoder = RotaryEncoder(1, 2, pin_factory=self.i2c_pin_factory)
-        self.encoder_button = Button(3, pin_factory=self.i2c_pin_factory)
+        self.handle = None
+        self.pin_factory = MockFactory()
+        pin1 = self.pin_factory.pin(1)
+        pin2 = self.pin_factory.pin(2)
+        pin3 = self.pin_factory.pin(3)
+        self.push_button1 = Button(1, pin_factory=self.pin_factory)
+        self.on_air_button = Button(2, pin_factory=self.pin_factory)
         self.pi = pigpio.pi()
         start_time = time.time()
-        self.i2c_handle = None
-        while (
-            not self.i2c_handle and time.time() - start_time < hub_constants.I2C_TIMEOUT
-        ):
-            self.i2c_handle = self.pi.i2c_open(
+        self.handle = None
+        while not self.handle and time.time() - start_time < hub_constants.I2C_TIMEOUT:
+            self.handle = self.pi.i2c_open(
                 hub_constants.I2C_BUS, hub_constants.I2C_ADDRESS
             )
             time.sleep(1)
-        if not self.i2c_handle:
+        if not self.handle:
             raise TimeoutError("i2c connection timed out")
 
     def update_i2c_devices(self):
-        byte = self.pi.i2c_read_byte(self.i2c_handle)
+        byte = self.pi.i2c_read_byte(self.handle)
         bits = [int(i) for i in "{0:08b}".format(byte)]
         if len(bits) == 0:
             return
         bits.reverse()
-        # BtnsData |= digitalRead(ENCA_PIN) << 0;
-        # BtnsData |= digitalRead(ENCB_PIN) << 1;
-        # BtnsData |= digitalRead(BTN1_PIN) << 2;
         for i, bit in enumerate(bits):
             if bit:
-                self.i2c_pin_factory.pin(i + 1).drive_high()
-        else:
-            self.i2c_pin_factory.pin(i + 1).drive_low()
+                self.pin_factory.pin(i + 1).drive_low()
+            else:
+                self.pin_factory.pin(i + 1).drive_high()
         return

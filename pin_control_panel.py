@@ -27,42 +27,56 @@ class PinControlPanel:
             27: {
                 "header_y": 10,
                 "pin": Device.pin_factory.pin(27),
-                "toggle": hub_constants.INVERT_ON_AIR_ACTIVE,
-                "type": "Button",
+                "toggle": False,
+                "type": "None",
+                "label": "None",
             },
             10: {
                 "header_y": 50,
                 "pin": Device.pin_factory.pin(10),
                 "toggle": False,
-                "type": "Output",
+                "type": "None",
+                "label": "None",
             },
             11: {
                 "header_y": 90,
                 "pin": Device.pin_factory.pin(11),
                 "toggle": False,
                 "type": "Button",
+                "label": "Encoder Button",
             },
             19: {
                 "header_y": 130,
                 "pin": Device.pin_factory.pin(19),
                 "toggle": False,
-                "type": "EncoderB",
+                "type": "None",
+                "label": "None",
             },
             26: {
                 "header_y": 170,
                 "pin": Device.pin_factory.pin(26),
-                "toggle": False,
-                "type": "EncoderA",
+                "toggle": hub_constants.INVERT_ON_AIR_ACTIVE,
+                "type": "Button",
+                "label": "On Air",
             },
         }
 
-    def draw_header(self, pin, y):
-        pr.draw_text(str(pin), hub_constants.SCREEN_WIDTH + 10, y, 20, pr.BLACK)
+    def draw_header(self, pin, data):
+        pr.draw_text(
+            str(pin), hub_constants.SCREEN_WIDTH + 10, data["header_y"], 20, pr.BLACK
+        )
+        pr.draw_text(
+            data["label"],
+            hub_constants.SCREEN_WIDTH + 120,
+            data["header_y"],
+            15,
+            pr.BLACK,
+        )
         pr.draw_line(
             hub_constants.SCREEN_WIDTH,
-            y + 20,
+            data["header_y"] + 20,
             hub_constants.SCREEN_WIDTH + 240,
-            y + 20,
+            data["header_y"] + 20,
             pr.GRAY,
         )
 
@@ -90,7 +104,7 @@ class PinControlPanel:
 
     # TODO: implement simulated rotary encoder
     def pin_control(self, pin, data):
-        self.draw_header(pin, data["header_y"])
+        self.draw_header(pin, data)
         data["toggle"] = hub_gui.toggle(
             hub_constants.SCREEN_WIDTH + 100,
             data["header_y"],

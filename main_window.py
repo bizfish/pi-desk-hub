@@ -46,22 +46,25 @@ debug = not is_raspberrypi()
 i2c_controller = None
 if debug:
     test_window = pin_control_panel.PinControlPanel()
+    on_air = Button(26)
 
 
 # initialize inputs
 # 26: xiao rp2040 sda - handles encoderA,B,button + radio transmitter/receiver?
 # 19: xiao rp2040 scl
-# 11: nav button?
-# 10: nav button?
-# 27: on-air limit switch/toggle
-on_air = Button(27)
+# 11: Encoder Button
+# 10: Encoder B
+# 27: Encoder A
+encoder = RotaryEncoder(27, 10)
+enocder_button = Button(11)
 if not debug:
     try:
         i2c_controller = I2cController()
     except TimeoutError as e:
         print(e)
-    encoder = i2c_controller.encoder
-    encoder_button = i2c_controller.encoder_button
+        quit()
+    push_button1 = i2c_controller.push_button1
+    on_air = i2c_controller.on_air_button
 
 
 def show_on_air():
@@ -77,7 +80,7 @@ def show_on_air():
 def handle_i2c():
     if i2c_controller:
         i2c_controller.update_i2c_devices()
-        if encoder_button.is_active:
+        if push_button1.is_active:
             pr.draw_text("encoder button active", 45, 10, 3, pr.GREEN)
         pr.draw_text(str(encoder.value), 45, 20, 3, pr.ORANGE)
     else:
