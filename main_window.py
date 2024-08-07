@@ -113,7 +113,7 @@ def update_camera_position(radius, angle):
 
 def render_rat():
     global camera_angle
-    if rat_alpha > 0 and on_air.is_active:  # hub_constants.DRAW_RAT
+    if draw_rat:
         camera_angle += 0.05
         camera.position = update_camera_position(10, camera_angle)
         pr.begin_texture_mode(rat_render)
@@ -141,6 +141,7 @@ while not pr.window_should_close():  # Detect window close button or ESC key
     else:
         encoder.value = encoder_val_prev
     rat_alpha = int(255 * (encoder.value + 1) / 2)
+    draw_rat = rat_alpha > 0 and hub_constants.DRAW_RAT
     render_rat()
 
     # Draw to texture
@@ -148,9 +149,13 @@ while not pr.window_should_close():  # Detect window close button or ESC key
     pr.clear_background(pr.SKYBLUE)
     handle_i2c()
     show_on_air()
-    pr.draw_texture_rec(
-        rat_render.texture, source, pr.Vector2(0, 0), pr.Color(255, 255, 255, rat_alpha)
-    )
+    if draw_rat:
+        pr.draw_texture_rec(
+            rat_render.texture,
+            source,
+            pr.Vector2(0, 0),
+            pr.Color(255, 255, 255, rat_alpha),
+        )
     pr.draw_fps(5, 220)
 
     pr.end_texture_mode()
