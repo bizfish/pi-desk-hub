@@ -130,7 +130,7 @@ class PinControlPanel:
         move = pr.get_mouse_wheel_move()
         pr.draw_text(str(move), 280, 250, 5, pr.BLACK)
         pr.draw_text(str(self.encoder_value), 280, 300, 5, pr.BLACK)
-        self.encoder_value = min(1, max(0, self.encoder_value + move * WHEEL_SPEED))
+        self.encoder_value = min(1, max(-1, self.encoder_value + move * WHEEL_SPEED))
 
     def mainloop(self, encoder_value):
         # Main game loop

@@ -76,7 +76,7 @@ else:
 # 27: Encoder A
 encoder = RotaryEncoder(27, 10)
 encoder_button = Button(11)
-encoder_val_prev = 0
+encoder_val_prev = -1
 
 
 def show_on_air():
@@ -134,12 +134,13 @@ def render_rat():
 # Main game loop
 while not pr.window_should_close():  # Detect window close button or ESC key
     # Update
+
     if encoder_button.is_active:
         pr.draw_text("Encoder button active!", 45, 200, 4, pr.BLACK)
         encoder_val_prev = encoder.value
     else:
         encoder.value = encoder_val_prev
-    rat_alpha = int(255 * encoder.value)
+    rat_alpha = int(255 * (encoder.value + 1) / 2)
     render_rat()
 
     # Draw to texture
