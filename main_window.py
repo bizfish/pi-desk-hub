@@ -1,10 +1,7 @@
 import io
-import os
-import time
 import pyray as pr
 from gpiozero import Button, RotaryEncoder
 import hub_constants
-import pigpio
 
 from i2c_controller import I2cController
 import pin_control_panel
@@ -74,6 +71,7 @@ else:
 # 27: Encoder A
 encoder = RotaryEncoder(27, 10)
 encoder_button = Button(11)
+encoder_val_prev = 0
 
 
 def show_on_air():
@@ -106,12 +104,24 @@ while not pr.window_should_close():  # Detect window close button or ESC key
     pr.begin_texture_mode(screen_texture)
     pr.clear_background(pr.SKYBLUE)
     pr.begin_mode_3d(camera)
-    pr.draw_model(rat_model, rat_position, 0.1, pr.WHITE)
+    if encoder_button.is_active:
+        pr.draw_text("Encoder button active!", 45, 200, 4, pr.BLACK)
+        encoder_val_prev = encoder.value
+    else:
+        encoder.value = encoder_val_prev
+    rat_rotation = 360 * encoder.value
+    pr.draw_model_ex(
+        rat_model,
+        rat_position,
+        pr.Vector3(0.0, 1.0, 0.0),
+        rat_rotation,
+        pr.Vector3(0.1, 0.1, 0.1),
+        pr.WHITE,
+    )
     pr.end_mode_3d()
     handle_i2c()
     show_on_air()
-    if encoder_button.is_active:
-        pr.draw_text("Encoder button active!", 45, 200, 4, pr.BLACK)
+
     pr.draw_fps(5, 220)
     pr.end_texture_mode()
 
@@ -128,6 +138,7 @@ while not pr.window_should_close():  # Detect window close button or ESC key
     )
     if debug:
         test_window.mainloop()
+        encoder.value = test_window.encoder_value
     pr.end_drawing()
 
 

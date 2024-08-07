@@ -12,6 +12,7 @@ import hub_constants, hub_gui
 11
 19
 26 """
+WHEEL_SPEED = 0.01
 
 
 class PinControlPanel:
@@ -22,6 +23,7 @@ class PinControlPanel:
         self.pin11 = Device.pin_factory.pin(11)
         self.pin19 = Device.pin_factory.pin(19)
         self.pin26 = Device.pin_factory.pin(26)
+        self.encoder_value = 0.0
 
         self.pins = {
             27: {
@@ -29,14 +31,14 @@ class PinControlPanel:
                 "pin": Device.pin_factory.pin(27),
                 "toggle": False,
                 "type": "None",
-                "label": "None",
+                "label": "EncoderA",
             },
             10: {
                 "header_y": 50,
                 "pin": Device.pin_factory.pin(10),
                 "toggle": False,
                 "type": "None",
-                "label": "None",
+                "label": "EncoderB",
             },
             11: {
                 "header_y": 90,
@@ -87,6 +89,14 @@ class PinControlPanel:
     def draw_pin_button(self, pin):
         if not pin["type"] == "Button":
             return
+        pin["toggle"] = hub_gui.toggle(
+            hub_constants.SCREEN_WIDTH + 100,
+            pin["header_y"],
+            10,
+            15,
+            "",
+            pin["toggle"],
+        )
         x = hub_constants.SCREEN_WIDTH + 45
         y = pin["header_y"]
         width = 45
@@ -105,14 +115,6 @@ class PinControlPanel:
     # TODO: implement simulated rotary encoder
     def pin_control(self, pin, data):
         self.draw_header(pin, data)
-        data["toggle"] = hub_gui.toggle(
-            hub_constants.SCREEN_WIDTH + 100,
-            data["header_y"],
-            10,
-            15,
-            "",
-            data["toggle"],
-        )
         pressed = self.draw_pin_button(data) or data["toggle"]
         if pressed:
             data["pin"].drive_low()
@@ -122,6 +124,9 @@ class PinControlPanel:
     def show_mouse_location(self):
         mouse_x, mouse_y = pr.get_mouse_x(), pr.get_mouse_y()
         pr.draw_text(f"{mouse_x}, {mouse_y}", mouse_x + 5, mouse_y - 5, 5, pr.BLACK)
+
+    def get_mwheel_input(self):
+        self.encoder_value += pr.get_mouse_wheel_move() * WHEEL_SPEED
 
     def mainloop(self):
         # Main game loop
@@ -133,6 +138,7 @@ class PinControlPanel:
             hub_constants.SCREEN_HEIGHT,
             pr.BLACK,
         )
+        self.get_mwheel_input()
         self.show_mouse_location()
         for pin, data in self.pins.items():
             self.pin_control(pin, data)
