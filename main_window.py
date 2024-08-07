@@ -82,9 +82,9 @@ def handle_i2c():
         y = 10
         for label, device in i2c_controller.devices.items():
             if label != "on_air_button" and device.is_active:
-                pr.draw_text(f"{label} active", 45, y, 3, pr.GREEN)
+                pr.draw_text(f"{label} active", 45, y, 3, pr.DARKGRAY)
                 y += 10
-        pr.draw_text(str(encoder.value), 45, 20, 3, pr.ORANGE)
+        pr.draw_text(str(encoder.value), 160, 20, 3, pr.BLACK)
     else:
         pr.draw_text("i2c_controller not found", 45, 2, 3, pr.RED)
 
@@ -100,7 +100,7 @@ while not pr.window_should_close():  # Detect window close button or ESC key
     handle_i2c()
     show_on_air()
     if enocder_button.is_active:
-        pr.draw_text("Encoder button active!", 45, 30, 3, pr.BLACK)
+        pr.draw_text("Encoder button active!", 45, 200, 4, pr.BLACK)
     pr.draw_fps(5, 220)
     pr.end_texture_mode()
 
