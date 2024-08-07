@@ -27,7 +27,7 @@ class PinControlPanel:
             27: {
                 "header_y": 10,
                 "pin": Device.pin_factory.pin(27),
-                "toggle": True,
+                "toggle": hub_constants.INVERT_ON_AIR_ACTIVE,
                 "type": "Button",
             },
             10: {
