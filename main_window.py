@@ -77,7 +77,7 @@ def show_on_air():
 def handle_i2c():
     if i2c_controller:
         i2c_controller.update_i2c_devices()
-        if encoder_button.is_active():
+        if encoder_button.is_active:
             pr.draw_text("encoder button active", 45, 10, 3, pr.GREEN)
         pr.draw_text(str(encoder.value), 45, 20, 3, pr.ORANGE)
     else:
