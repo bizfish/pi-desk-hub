@@ -63,8 +63,7 @@ if not debug:
     except TimeoutError as e:
         print(e)
         quit()
-    push_button1 = i2c_controller.push_button1
-    on_air = i2c_controller.on_air_button
+    on_air = i2c_controller.devices["on_air_button"]
 
 
 def show_on_air():
@@ -79,9 +78,12 @@ def show_on_air():
 
 def handle_i2c():
     if i2c_controller:
-        i2c_controller.update_i2c_devices()
-        if push_button1.is_active:
-            pr.draw_text("push_button1 active", 45, 10, 3, pr.GREEN)
+        i2c_controller.update_i2c_pins()
+        y = 10
+        for label, device in i2c_controller.devices.items():
+            if label != "on_air_button" and device.is_active:
+                pr.draw_text(f"{label} active", 45, y, 3, pr.GREEN)
+                y += 10
         pr.draw_text(str(encoder.value), 45, 20, 3, pr.ORANGE)
     else:
         pr.draw_text("i2c_controller not found", 45, 2, 3, pr.RED)
