@@ -1,0 +1,5 @@
+LICENSE: CC Attribution 4.0
+LICENSE LINK: https://creativecommons.org/licenses/by/4.0/
+SOURCE: https://sketchfab.com/3d-models/horizontally-spinning-rat-91f25eb2535c4618beea47dd6dd68f6f
+AUTHOR: https://sketchfab.com/vervoortward
+MODIFICATIONS: Converted to .obj
