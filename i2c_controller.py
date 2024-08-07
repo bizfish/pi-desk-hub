@@ -36,15 +36,22 @@ class I2cController:
             time.sleep(1)
         if not self.handle:
             raise TimeoutError("i2c connection timed out")
+        self.last_read = 0
 
     def update_i2c_pins(self):
-        byte = self.pi.i2c_read_byte(self.handle)
-        bits = [int(i) for i in "{0:08b}".format(byte)[::-1]]
-        if len(bits) == 0:
+        # the peripheral only updates i2c every 10ms
+        if time.time() - self.last_read > 0.01:
+            try:
+                byte = self.pi.i2c_read_byte(self.handle)
+                bits = [int(i) for i in "{0:08b}".format(byte)[::-1]]
+                if len(bits) == 0:
+                    return
+                for i, bit in enumerate(bits):
+                    if bit:
+                        self.pin_factory.pin(i + 1).drive_low()
+                    else:
+                        self.pin_factory.pin(i + 1).drive_high()
+            except pigpio.error as e:
+                print("i2c read failed! Skipping for this frame..")
+                return
             return
-        for i, bit in enumerate(bits):
-            if bit:
-                self.pin_factory.pin(i + 1).drive_low()
-            else:
-                self.pin_factory.pin(i + 1).drive_high()
-        return
