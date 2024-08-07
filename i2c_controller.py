@@ -9,9 +9,9 @@ class I2cController:
     def __init__(self):
         self.handle = None
         self.pin_factory = MockFactory()
-        pin1 = self.pin_factory.pin(1)
-        pin2 = self.pin_factory.pin(2)
-        pin3 = self.pin_factory.pin(3)
+        self.pins = []
+        for i in range(1, 8):
+            self.pins.append(self.pin_factory.pin(i))
         self.push_button1 = Button(1, pin_factory=self.pin_factory)
         self.on_air_button = Button(2, pin_factory=self.pin_factory)
         self.pi = pigpio.pi()
