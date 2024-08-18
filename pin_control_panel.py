@@ -1,25 +1,20 @@
-import math
 import pyray as pr
-from raylib import ffi
-from gpiozero import Device, Button
+from gpiozero import Device
 from gpiozero.pins.mock import MockFactory
-import hub_constants, hub_gui
+import hub_constants
+import hub_gui
 
 # Initialization
-
-
-""" 27
-10
-11
-19
-26 """
 WHEEL_SPEED = 0.1
 
 
 class PinControlPanel:
     def __init__(self):
         Device.pin_factory = MockFactory()
-        pr.set_window_size(hub_constants.SCREEN_WIDTH * 2, hub_constants.SCREEN_HEIGHT)
+        if hub_constants.DISPLAY_TEST_PANEL:
+            pr.set_window_size(
+                hub_constants.SCREEN_WIDTH, hub_constants.SCREEN_HEIGHT * 2
+            )
         self.pin10 = Device.pin_factory.pin(10)
         self.pin11 = Device.pin_factory.pin(11)
         self.pin19 = Device.pin_factory.pin(19)
@@ -55,51 +50,56 @@ class PinControlPanel:
                 "type": "None",
                 "label": "None",
             },
-            26: {
+            1: {
                 "header_y": 170,
                 "pin": Device.pin_factory.pin(26),
-                "toggle": hub_constants.INVERT_ON_AIR_ACTIVE,
+                "toggle": False,
                 "type": "Button",
                 "label": "On Air",
+            },
+            2: {
+                "header_y": 210,
+                "pin": Device.pin_factory.pin(2),
+                "toggle": False,
+                "type": "Button",
+                "label": "Pushbutton1",
             },
         }
 
     def draw_header(self, pin, data):
         pr.draw_text(
-            str(pin), hub_constants.SCREEN_WIDTH + 10, data["header_y"], 20, pr.BLACK
+            str(pin), 10, hub_constants.SCREEN_HEIGHT + data["header_y"], 20, pr.BLACK
         )
         pr.draw_text(
             data["label"],
-            hub_constants.SCREEN_WIDTH + 120,
-            data["header_y"],
+            120,
+            hub_constants.SCREEN_HEIGHT + data["header_y"],
             15,
             pr.BLACK,
         )
         pr.draw_line(
+            0,
+            hub_constants.SCREEN_HEIGHT + data["header_y"] + 20,
             hub_constants.SCREEN_WIDTH,
-            data["header_y"] + 20,
-            hub_constants.SCREEN_WIDTH + 240,
-            data["header_y"] + 20,
+            hub_constants.SCREEN_HEIGHT + data["header_y"] + 20,
             pr.GRAY,
         )
 
     def close(self):
         pr.close_window()
 
-    # TODO: limit to type: Button
     def draw_pin_button(self, pin):
         if not pin["type"] == "Button":
             return
         pin["toggle"] = hub_gui.toggle(
-            hub_constants.SCREEN_WIDTH + 100,
-            pin["header_y"],
+            100,
+            hub_constants.SCREEN_HEIGHT + pin["header_y"],
             10,
             15,
-            "",
             pin["toggle"],
         )
-        x = hub_constants.SCREEN_WIDTH + 45
-        y = pin["header_y"]
+        x = 45
+        y = hub_constants.SCREEN_HEIGHT + pin["header_y"]
         width = 45
         height = 15
         if pr.is_mouse_button_down(0) and pr.check_collision_point_rec(
@@ -113,9 +113,7 @@ class PinControlPanel:
             pr.draw_rectangle(x, y, width, height, pr.BLUE)
             return False
 
-    # TODO: implement simulated rotary encoder
-    def pin_control(self, pin, data):
-        self.draw_header(pin, data)
+    def pin_control(self, data):
         pressed = self.draw_pin_button(data) or data["toggle"]
         if pressed:
             data["pin"].drive_low()
@@ -126,7 +124,7 @@ class PinControlPanel:
         mouse_x, mouse_y = pr.get_mouse_x(), pr.get_mouse_y()
         pr.draw_text(f"{mouse_x}, {mouse_y}", mouse_x + 5, mouse_y - 5, 5, pr.BLACK)
 
-    def get_mwheel_input(self):
+    def simulate_encoder(self):
         move = pr.get_mouse_wheel_move()
         pr.draw_text(str(move), 280, 250, 5, pr.BLACK)
         pr.draw_text(str(self.encoder_value), 280, 300, 5, pr.BLACK)
@@ -136,14 +134,19 @@ class PinControlPanel:
         # Main game loop
         # Update
         self.encoder_value = encoder_value
-        pr.draw_line(
-            hub_constants.SCREEN_WIDTH + 1,
-            0,
-            hub_constants.SCREEN_WIDTH + 1,
-            hub_constants.SCREEN_HEIGHT,
-            pr.BLACK,
-        )
-        self.get_mwheel_input()
+        if hub_constants.DISPLAY_TEST_PANEL:
+            pr.draw_fps(5, 220)
+            pr.draw_line(
+                0,
+                hub_constants.SCREEN_HEIGHT,
+                hub_constants.SCREEN_WIDTH,
+                hub_constants.SCREEN_HEIGHT,
+                pr.BLACK,
+            )
+        self.simulate_encoder()
         self.show_mouse_location()
+
         for pin, data in self.pins.items():
-            self.pin_control(pin, data)
+            if hub_constants.DISPLAY_TEST_PANEL:
+                self.draw_header(pin, data)
+                self.pin_control(data)

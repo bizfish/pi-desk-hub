@@ -1,8 +1,7 @@
 import pyray as pr
-from raylib import ffi
 
 
-def toggle(x, y, width, height, text, checked):
+def toggle(x, y, width, height, checked):
     if pr.is_mouse_button_pressed(0) and pr.check_collision_point_rec(
         pr.get_mouse_position(), pr.Rectangle(x, y, width, height)
     ):

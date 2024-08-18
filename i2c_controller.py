@@ -1,8 +1,8 @@
 import time
 import pigpio
-import hub_constants
 from gpiozero.pins.mock import MockFactory
 from gpiozero import Button
+import hub_constants
 
 
 class I2cController:
@@ -43,7 +43,7 @@ class I2cController:
         if time.time() - self.last_read > 0.01:
             try:
                 byte = self.pi.i2c_read_byte(self.handle)
-                bits = [int(i) for i in "{0:08b}".format(byte)[::-1]]
+                bits = [int(i) for i in f"{byte:08b}"[::-1]]
                 if len(bits) == 0:
                     return
                 for i, bit in enumerate(bits):
@@ -51,7 +51,7 @@ class I2cController:
                         self.pin_factory.pin(i + 1).drive_low()
                     else:
                         self.pin_factory.pin(i + 1).drive_high()
-            except pigpio.error as e:
+            except pigpio.error:
                 print("i2c read failed! Skipping for this frame..")
                 return
             return
