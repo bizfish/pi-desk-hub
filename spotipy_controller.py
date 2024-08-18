@@ -56,7 +56,7 @@ class SpotifyController:
         )
         await self.api_client.create_new_client()
         if self.auth_token.is_expired():
-            self.api_client.refresh_token(self.auth_token)
+            await self.api_client.refresh_token(self.auth_token)
         await self.check_current_playback()
 
     async def get_token(self):
@@ -134,9 +134,7 @@ class SpotifyController:
         self.is_updating = False
 
     async def update_loop(self):
-        print("starting update_loop")
         while self.is_updating:
-            print("update_loop!")
             await self.check_current_playback()
             if self.playing:
                 await asyncio.sleep(3)
@@ -148,28 +146,34 @@ class SpotifyController:
             self.playing.draw_track_info()
             self.displayed_track = self.playing
 
-    async def toggle_playback(self):
+    def toggle_playback(self):
         if self.playing:
             if self.playing.is_playing:
-                await self.pause_playback()
+                self.pause_playback()
             else:
-                await self.start_playback()
+                self.start_playback()
 
-    async def pause_playback(self):
+    def pause_playback(self):
         if self.playing and self.playing.is_playing:
-            try:
-                await self.api_client.player.pause()
-            except SpotifyAPIError:
-                print("Attempted to pause but failed.")
-            self.playing.is_playing = False
+            asyncio.create_task(self.pause())
 
-    async def start_playback(self):
+    async def pause(self):
+        try:
+            await self.api_client.player.pause()
+        except SpotifyAPIError:
+            print("Attempted to pause but failed.")
+        self.playing.is_playing = False
+
+    def start_playback(self):
         if self.playing and not self.playing.is_playing:
-            try:
-                await self.api_client.player.play()
-            except SpotifyAPIError:
-                print("Attempted to play but failed.")
-            self.playing.is_playing = True
+            asyncio.create_task(self.play())
+
+    async def play(self):
+        try:
+            await self.api_client.player.play()
+        except SpotifyAPIError:
+            print("Attempted to play but failed.")
+        self.playing.is_playing = True
 
 
 class SpotifyTrack:

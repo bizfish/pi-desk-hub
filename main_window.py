@@ -99,20 +99,18 @@ class PiDeskHub:
         pr.unload_model(self.rat_model)
         pr.close_window()
 
-    async def async_init(self):
+    async def start_game_loop(self):
         await self.initialize_spotipy()
         if self.spotipy:
             self.spotipy.is_updating = True
-            asyncio.create_task(self.spotipy.update_loop())
             if hub_constants.PAUSE_ON_AIR:
                 self.on_air.when_activated = self.spotipy.pause_playback
                 if hub_constants.RESUME_OFF_AIR:
                     self.on_air.when_deactivated = self.spotipy.start_playback
-
-    async def main_loop(self):
+            asyncio.create_task(self.spotipy.update_loop())
         while not pr.window_should_close():  # Detect window close button or ESC key
             # Update
-
+            await asyncio.sleep(0)  # let async stuff run
             if self.encoder_button.is_active:
                 pr.draw_text("Encoder button active!", 45, 200, 4, pr.BLACK)
                 self.encoder_val_prev = self.encoder.value
@@ -222,12 +220,10 @@ class PiDeskHub:
             self.spotipy = None
 
 
-async def main():
-    # TODO play here to fix event loop - move hub main_loop loop out to here
+def main():
     hub = PiDeskHub()
-    await hub.async_init()
-    await hub.main_loop()
+    asyncio.run(hub.start_game_loop())
 
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    main()
