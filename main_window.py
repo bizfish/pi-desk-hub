@@ -63,9 +63,9 @@ class PiDeskHub:
         )  # Camera up vector (rotation towards target)
         self.camera.fovy = 45.0  # Camera field-of-view Y
         self.camera.projection = pr.CAMERA_PERSPECTIVE  # Camera mode type
-        self.camera_angle = 0
         self.rat_model = pr.load_model("./resources/rat.obj")
         self.rat_position = pr.Vector3(0, 1, 0)
+        self.rat_rotation = -90
         self.rat_alpha = 0
         # handle mock pins and i2c connection
 
@@ -157,6 +157,14 @@ class PiDeskHub:
                 self.test_window.mainloop(self.encoder.value)
                 self.encoder.value = self.test_window.encoder_value
             pr.end_drawing()
+        if self.spotipy:
+            loop = asyncio.get_event_loop()
+            if loop.is_running():
+                # If the loop is running, create a task for the cleanup
+                loop.create_task(self.spotipy.cleanup())
+            else:
+                # If the loop is not running, run the cleanup task directly
+                loop.run_until_complete(self.spotipy.cleanup())
 
     def handle_i2c(self):
         if self.i2c_controller:
@@ -170,19 +178,8 @@ class PiDeskHub:
         elif self.debug:
             pr.draw_text("Input peripheral not found", 40, 2, 12, pr.RED)
 
-    @staticmethod
-    def update_camera_position(radius, angle):
-        # Calculate x and z coordinates based on the angle and radius
-        x = radius * math.cos(angle)
-        z = radius * math.sin(angle)
-
-        # Return the updated camera position
-        return pr.Vector3(x, 5, z)
-
     def render_rat(self):
         if self.rat_alpha:
-            self.camera_angle += 0.05
-            self.camera.position = self.update_camera_position(10, self.camera_angle)
             pr.begin_texture_mode(self.rat_render)
             pr.clear_background(pr.Color(255, 255, 255, 0))
             pr.begin_mode_3d(self.camera)
@@ -190,10 +187,11 @@ class PiDeskHub:
                 self.rat_model,
                 self.rat_position,
                 pr.Vector3(0.0, 1.0, 0.0),
-                -90,
+                self.rat_rotation,
                 pr.Vector3(0.1, 0.1, 0.1),
                 pr.Color(255, 255, 255, 255),
             )
+            self.rat_rotation += 1.5
             pr.end_mode_3d()
             pr.end_texture_mode()
 

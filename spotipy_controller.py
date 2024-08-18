@@ -32,16 +32,6 @@ class SpotifyController:
         self.renew_token = TokenRenewClass()
         self.is_updating = False
 
-    def __del__(self):
-        # Schedule the async cleanup function to run on deletion
-        loop = asyncio.get_event_loop()
-        if loop.is_running():
-            # If the loop is running, create a task for the cleanup
-            loop.create_task(self.cleanup())
-        else:
-            # If the loop is not running, run the cleanup task directly
-            loop.run_until_complete(self.cleanup())
-
     async def cleanup(self):
         await self.api_client.close_client()
 
