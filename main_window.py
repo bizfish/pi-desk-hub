@@ -1,3 +1,4 @@
+import asyncio
 import io
 import math
 import sys
@@ -7,7 +8,7 @@ import hub_constants
 
 from i2c_controller import I2cController
 import pin_control_panel
-from spotipy_controller import SpotipyController
+from spotipy_controller import SpotifyController
 
 
 def is_raspberrypi():
@@ -81,11 +82,6 @@ class PiDeskHub:
                 sys.exit()
             self.on_air = self.i2c_controller.devices["on_air_button"]
             self.push_button1 = self.i2c_controller.devices["push_button1"]
-        self.initialize_spotipy()
-        if hub_constants.PAUSE_ON_AIR:
-            self.on_air.when_activated = self.spotipy.pause_playback
-            if hub_constants.RESUME_OFF_AIR:
-                self.on_air.when_deactivated = self.spotipy.start_playback
 
         # initialize inputs
         # 26: xiao rp2040 sda - handles encoderA,B,button + radio transmitter/receiver?
@@ -103,7 +99,17 @@ class PiDeskHub:
         pr.unload_model(self.rat_model)
         pr.close_window()
 
-    def main_loop(self):
+    async def async_init(self):
+        await self.initialize_spotipy()
+        if self.spotipy:
+            self.spotipy.is_updating = True
+            asyncio.create_task(self.spotipy.update_loop())
+            if hub_constants.PAUSE_ON_AIR:
+                self.on_air.when_activated = self.spotipy.pause_playback
+                if hub_constants.RESUME_OFF_AIR:
+                    self.on_air.when_deactivated = self.spotipy.start_playback
+
+    async def main_loop(self):
         while not pr.window_should_close():  # Detect window close button or ESC key
             # Update
 
@@ -121,8 +127,8 @@ class PiDeskHub:
             pr.clear_background(pr.SKYBLUE)
             self.handle_i2c()
             self.show_on_air()
-            if self.spotipy and self.spotipy.playing:
-                self.spotipy.update_track()
+            if self.spotipy:
+                self.spotipy.display_track()
             if self.rat_alpha:
                 pr.draw_texture_rec(
                     self.rat_render.texture,
@@ -202,10 +208,11 @@ class PiDeskHub:
         pr.draw_text("ON AIR", 205, 10, 30, color)
         # TODO manage radio transmitter (send to xiao or just do it in arduino)
 
-    def initialize_spotipy(self):
-        if hub_constants.SPOTIPY_ENABLED:
+    async def initialize_spotipy(self):
+        if hub_constants.SPOTIFY_ENABLED:
             try:
-                self.spotipy = SpotipyController(self)
+                self.spotipy = SpotifyController(self)
+                await self.spotipy.async_init()
                 if self.spotipy:
                     self.push_button1.when_activated = self.spotipy.toggle_playback
             except PermissionError as e:
@@ -215,6 +222,12 @@ class PiDeskHub:
             self.spotipy = None
 
 
-if __name__ == "__main__":
+async def main():
+    # TODO play here to fix event loop - move hub main_loop loop out to here
     hub = PiDeskHub()
-    hub.main_loop()
+    await hub.async_init()
+    await hub.main_loop()
+
+
+if __name__ == "__main__":
+    asyncio.run(main())
