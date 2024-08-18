@@ -53,7 +53,7 @@ class PinControlPanel:
             1: {
                 "header_y": 170,
                 "pin": Device.pin_factory.pin(26),
-                "toggle": False,
+                "toggle": True,
                 "type": "Button",
                 "label": "On Air",
             },

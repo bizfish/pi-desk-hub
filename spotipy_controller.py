@@ -107,19 +107,19 @@ class SpotipyController:
                 self.start_playback()
 
     def pause_playback(self):
-        if self.playing:
+        if self.playing and self.playing.is_playing:
             try:
                 self.sp.pause_playback()
             except SpotifyException:
-                print("Attempted to play but failed. Assuming it's already paused.")
+                print("Attempted to pause but failed. Assuming it's already paused.")
             self.playing.is_playing = False
 
     def start_playback(self):
-        if self.playing:
+        if self.playing and not self.playing.is_playing:
             try:
                 self.sp.start_playback()
             except SpotifyException:
-                print("Attempted to pause but failed. Assuming it's already playing.")
+                print("Attempted to play but failed. Assuming it's already playing.")
             self.playing.is_playing = True
 
 
