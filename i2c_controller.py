@@ -15,7 +15,7 @@ class I2cController:
             self.pins.append(self.pin_factory.pin(i))
         # create Devices
         self.devices = {
-            "on_air_button": Button(1, pin_factory=self.pin_factory),
+            "on_air_button": Button(1, pin_factory=self.pin_factory, pull_up=False),
             "push_button1": Button(2, pin_factory=self.pin_factory),
             "push_button2": Button(3, pin_factory=self.pin_factory),
             "push_button3": Button(4, pin_factory=self.pin_factory),
