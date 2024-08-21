@@ -9,7 +9,8 @@ WHEEL_SPEED = 0.1
 
 
 class PinControlPanel:
-    def __init__(self):
+    def __init__(self, window):
+        self.window = window
         Device.pin_factory = MockFactory()
         if hub_constants.DISPLAY_TEST_PANEL:
             pr.set_window_size(
@@ -18,9 +19,7 @@ class PinControlPanel:
         self.pin10 = Device.pin_factory.pin(10)
         self.pin11 = Device.pin_factory.pin(11)
         self.pin19 = Device.pin_factory.pin(19)
-        self.pin26 = Device.pin_factory.pin(26)
         self.encoder_value = 0.0
-
         self.pins = {
             27: {
                 "header_y": 10,
@@ -90,7 +89,7 @@ class PinControlPanel:
 
     def draw_pin_button(self, pin):
         if not pin["type"] == "Button":
-            return
+            return None
         pin["toggle"] = hub_gui.toggle(
             100,
             hub_constants.SCREEN_HEIGHT + pin["header_y"],

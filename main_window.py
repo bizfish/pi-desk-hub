@@ -1,7 +1,7 @@
 import asyncio
 import io
-import math
 import sys
+import aiohttp
 import pyray as pr
 from gpiozero import Button, RotaryEncoder
 import hub_constants
@@ -68,9 +68,10 @@ class PiDeskHub:
         self.rat_rotation = -90
         self.rat_alpha = 0
         # handle mock pins and i2c connection
-
+        self.remote_connected = False
+        self.connection_icon = pr.load_texture("./resources/connection_icon.png")
         if self.debug:
-            self.test_window = pin_control_panel.PinControlPanel()
+            self.test_window = pin_control_panel.PinControlPanel(self)
             self.on_air = Button(26, pull_up=False)
             self.push_button1 = Button(2)
             self.i2c_controller = None
@@ -104,10 +105,11 @@ class PiDeskHub:
         if self.spotipy:
             self.spotipy.is_updating = True
             if hub_constants.PAUSE_ON_AIR:
-                self.on_air.when_activated = self.spotipy.pause_playback
+                self.on_air.when_activated = self.sync_on_air
                 if hub_constants.RESUME_OFF_AIR:
-                    self.on_air.when_deactivated = self.spotipy.start_playback
+                    self.on_air.when_deactivated = self.sync_on_air
             asyncio.create_task(self.spotipy.update_loop())
+        asyncio.create_task(self.on_air_remote_loop())
         while not pr.window_should_close():  # Detect window close button or ESC key
             # Update
             await asyncio.sleep(0)  # let async stuff run
@@ -124,7 +126,7 @@ class PiDeskHub:
             pr.begin_texture_mode(self.screen_texture)
             pr.clear_background(pr.SKYBLUE)
             self.handle_i2c()
-            self.show_on_air()
+            self.draw_on_air()
             if self.spotipy:
                 self.spotipy.display_track()
             if self.rat_alpha:
@@ -166,6 +168,10 @@ class PiDeskHub:
                 # If the loop is not running, run the cleanup task directly
                 loop.run_until_complete(self.spotipy.cleanup())
 
+    def sync_on_air(self):
+        endpoint = "/H" if self.on_air.is_active else "/L"
+        asyncio.create_task(self.send_request(endpoint))
+
     def handle_i2c(self):
         if self.i2c_controller:
             self.i2c_controller.update_i2c_pins()
@@ -195,14 +201,42 @@ class PiDeskHub:
             pr.end_mode_3d()
             pr.end_texture_mode()
 
-    def show_on_air(self):
+    async def on_air_remote_loop(self):
+        while not pr.window_should_close():
+            if not self.remote_connected:
+                self.sync_on_air()
+            await asyncio.sleep(10)
+
+    async def send_request(self, endpoint):
+        try:
+            url = f"http://{hub_constants.SERVER_IP}:{hub_constants.SERVER_PORT}{endpoint}"
+            async with aiohttp.ClientSession() as session:
+                async with session.get(url) as response:
+                    if response.status == 200:
+                        print(f"Response: {await response.text()}")
+                        self.remote_connected = True
+                    else:
+                        print(
+                            f"Failed to get a valid response. Status code: {response.status}"
+                        )
+                        self.remote_connected = False
+        except ConnectionRefusedError:
+            self.remote_connected = False
+        except aiohttp.ClientConnectorError:
+            self.remote_connected = False
+
+    def draw_on_air(self):
         if self.on_air.is_active:
             color = pr.RED
         else:
             color = pr.GRAY
-        pr.draw_rectangle(200, 10, 115, 28, pr.LIGHTGRAY)
-        pr.draw_text("ON AIR", 205, 10, 30, color)
-        # TODO manage radio transmitter (send to xiao or just do it in arduino)
+        if self.remote_connected:
+            source = pr.Rectangle(0, 16, 16, 16)
+        else:
+            source = pr.Rectangle(0, 0, 16, 16)
+        pr.draw_rectangle(175, 5, 145, 28, pr.LIGHTGRAY)
+        pr.draw_texture_rec(self.connection_icon, source, pr.Vector2(180, 11), pr.WHITE)
+        pr.draw_text("ON AIR", 205, 5, 30, color)
 
     async def initialize_spotipy(self):
         if hub_constants.SPOTIFY_ENABLED:

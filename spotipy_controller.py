@@ -10,7 +10,7 @@ from PIL import Image
 from async_spotify.authentification.authorization_flows import AuthorizationCodeFlow
 from async_spotify.authentification import SpotifyAuthorisationToken
 from async_spotify import SpotifyApiClient, TokenRenewClass
-from async_spotify.spotify_errors import TokenExpired, SpotifyError, SpotifyAPIError
+from async_spotify.spotify_errors import SpotifyError, SpotifyAPIError
 
 
 import hub_constants
